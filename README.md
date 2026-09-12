@@ -1,58 +1,58 @@
 # PulseOps
 
-PulseOps is an enterprise-style **IT incident and operations management platform**. It combines a compact operations dashboard with incident workflows, service ownership, SLA tracking, teams/on-call information, knowledge articles, notifications, audit logs, private attachments, and role-aware administration.
+PulseOps is an enterprise-style IT incident and operations management platform. It provides an operations dashboard, incident workflows, service ownership, SLA tracking, team and on-call information, knowledge articles, notifications, audit logs, private attachments, and role-based administration.
 
-The current implementation keeps the original single-page HTML/CSS design and connects it to **Supabase** rather than introducing a separate application server.
+The project keeps a single-page HTML/CSS interface and uses Supabase as its backend platform instead of a separate application server.
 
 ## Stack
 
-- Frontend: HTML, CSS, vanilla JavaScript, hash-based SPA routing
+- Frontend: HTML, CSS, vanilla JavaScript, and hash-based SPA routing
 - Backend platform: Supabase
 - Database: PostgreSQL
 - Authentication: Supabase Auth
 - Authorization: PostgreSQL Row Level Security (RLS)
-- Realtime: Supabase Realtime/Postgres Changes
-- Files: private Supabase Storage bucket
-- Privileged server operations: Supabase Edge Functions for administrator user invitations and Pulse AI incident triage
+- Realtime updates: Supabase Realtime and Postgres Changes
+- File storage: Private Supabase Storage bucket
+- Server-side operations: Supabase Edge Functions for administrator invitations and Pulse AI incident triage
 
 ## Architecture
 
 ```text
 Browser / PulseOps UI
         |
-        +-- Supabase JS client (publishable key only)
+        +-- Supabase JavaScript client
+        |       +-- publishable key only
         |
         +-- Supabase Auth
         |
         +-- PostgREST -> PostgreSQL
-        |                 |
         |                 +-- constraints
-        |                 +-- triggers/functions
+        |                 +-- triggers and functions
         |                 +-- RLS authorization boundary
         |
-        +-- Realtime
+        +-- Supabase Realtime
         |
         +-- Private Storage
         |
         +-- Edge Function: admin-invite-user
-        |                +-- server-side privileged Supabase key
+        |                 +-- server-side privileged Supabase credentials
         |
         +-- Edge Function: incident-triage
-                         +-- server-side Anthropic API key
+                          +-- server-side Anthropic API key
 ```
 
-The browser never requires the database password, service-role key, or secret key. Normal application data access runs as the signed-in user and is constrained by RLS.
+The browser never needs the database password, Supabase service-role key, or any other secret key. Normal application data access is performed as the signed-in user and is limited by PostgreSQL RLS policies.
 
 ## Roles
 
-- **Employee** — report incidents, see incidents they reported, add public comments, upload permitted attachments, read published knowledge articles.
-- **Engineer** — work assigned/team incidents, acknowledge/change status, add internal notes, use operational service/team/on-call views.
-- **Manager** — team incident management, assignment/priority changes, SLA/analytics/on-call visibility.
-- **Administrator** — organization-wide administration, users, SLA policies, audit logs, settings and all operational views.
+- **Employee**: Report incidents, view incidents they submitted, add public comments, upload permitted attachments, and read published knowledge articles.
+- **Engineer**: Work on assigned or team incidents, acknowledge incidents, change status, add internal notes, and use service, team, and on-call views.
+- **Manager**: Manage team incidents, update assignments and priorities, and view SLA, analytics, and on-call information.
+- **Administrator**: Manage organization-wide users, teams, SLA policies, audit logs, settings, and operational views.
 
-Role-aware navigation is a UX layer only. Database RLS remains the security boundary.
+Role-based navigation improves the user experience, but the database RLS policies remain the actual security boundary.
 
-## Project layout
+## Project Structure
 
 ```text
 PulseOps/
@@ -60,7 +60,7 @@ PulseOps/
 ├─ reset-password.html
 ├─ start-pulseops.bat
 ├─ supabase-config.example.js
-├─ supabase-config.js          # local-only; ignored by git
+├─ supabase-config.js          # Local-only; ignored by Git
 ├─ README.md
 ├─ SUPABASE_SETUP.md
 ├─ BACKEND_QA.md
@@ -91,9 +91,9 @@ PulseOps/
    └─ verify-backend.sql
 ```
 
-## Local run
+## Local Testing
 
-Do not open `pulseops-ui.html` directly with `file://` when testing authentication redirects. Serve the folder over HTTP, for example:
+Do not open `pulseops-ui.html` directly with `file://` when testing authentication redirects. Serve the project folder over HTTP instead:
 
 ```bash
 python -m http.server 5501
@@ -105,58 +105,86 @@ Then open:
 http://localhost:5501/pulseops-ui.html
 ```
 
-If Supabase is not configured, PulseOps intentionally shows a setup screen instead of pretending backend operations succeeded.
+On Windows, you can also run:
+
+```text
+start-pulseops.bat
+```
+
+If Supabase is not configured, PulseOps intentionally displays a setup screen instead of pretending that backend operations succeeded.
 
 ## Setup
 
-See **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)** for the complete beginner-friendly setup sequence, migration order, initial administrator bootstrap, Edge Function deployment, and two-session Realtime test.
+For the complete setup process, see [SUPABASE_SETUP.md](SUPABASE_SETUP.md). It covers:
 
-## Backend features implemented
+- The required migration order
+- Supabase project configuration
+- Initial administrator setup
+- Edge Function deployment
+- Authentication redirect configuration
+- Two-session Realtime testing
 
-- Session login/logout and password recovery scaffolding
-- Automatic application profile creation for Auth users
-- Multi-tenant organization IDs on operational data
+## Backend Features
+
+- Session login, logout, and password recovery
+- Automatic application profile creation for Supabase Auth users
+- Organization IDs on operational data
 - Database-generated incident and knowledge article numbers
-- Database-side SLA deadlines
-- Controlled incident acknowledge/status/assignment/priority RPCs
+- Database-generated SLA deadlines
+- Controlled RPCs for incident assignment, priority, status, and acknowledgement
 - Incident comments and internal notes with visibility policies
-- Database-generated incident activity timeline
-- Private incident attachment storage and metadata
-- Realtime incident/comment/activity/attachment/notification subscriptions plus live service health refresh
-- User-specific notifications and read state
-- Admin-controlled role/team/status changes
-- Manager/Admin service-health updates, service creation with auto-generated slugs, knowledge article editing and on-call schedule management
-- CSV export for incident views and live dashboard period controls
-- Admin invitation Edge Function
-- Pulse AI incident triage Edge Function (Claude API): suggests priority, category, owning team and a rationale for a draft incident, constrained to the organization's real teams and a fixed category list
-- Audit logging for operational/admin changes
-- RLS policies for role and organization scope
-- Hardened password-recovery flow using a dedicated callback page and PKCE, plus a full-viewport application shell
+- Database-generated incident activity timelines
+- Private incident attachments and metadata
+- Realtime updates for incidents, comments, activity, attachments, notifications, and service health
+- User-specific notifications and read states
+- Administrator-controlled role, team, and user status changes
+- Manager and administrator service-health updates
+- Service creation with automatically generated slugs
+- Knowledge article editing
+- On-call schedule management
+- CSV exports for incident views
+- Dashboard period controls
+- Administrator invitation Edge Function
+- Pulse AI incident triage Edge Function using the Claude API
+- Audit logging for operational and administrative changes
+- RLS policies scoped by role and organization
+- Dedicated password recovery page using PKCE
 
-## Security notes
+The Pulse AI incident triage function suggests a priority, category, owning team, and rationale for a draft incident. Suggestions are constrained to the organization's available teams and the supported incident categories.
 
-- `supabase-config.js` is ignored by git.
-- Only the **Project URL** and **publishable/anon key** belong in browser configuration.
-- Never put `SUPABASE_SERVICE_ROLE_KEY`, a Supabase secret key, `ANTHROPIC_API_KEY`, or the database password in frontend files.
-- The administrator invitation and Pulse AI triage flows both use Edge Functions so privileged credentials remain server-side.
-- User-supplied incident/comment/article text is escaped before being inserted into the UI.
-- Internal incident notes are filtered by RLS, not just hidden with CSS.
-- Audit logs are append-only from normal browser access.
+## Security Notes
 
-## Password recovery
+- `supabase-config.js` is excluded from Git.
+- Only the Supabase project URL and publishable or anon key belong in browser configuration.
+- Never place `SUPABASE_SERVICE_ROLE_KEY`, a Supabase secret key, `ANTHROPIC_API_KEY`, or the database password in frontend files.
+- Administrator invitations and Pulse AI triage run through Edge Functions so privileged credentials remain server-side.
+- User-provided incident, comment, and article text is escaped before being inserted into the UI.
+- Internal incident notes are filtered by RLS, not merely hidden with CSS.
+- Audit logs are append-only through normal browser access.
 
-PulseOps uses a dedicated `reset-password.html` page for Supabase password recovery so auth callback parameters never conflict with the application's hash router.
+## Password Recovery
 
-- Password-reset redirects are computed from the current origin/path and use PKCE so auth recovery does not collide with PulseOps hash routing.
+PulseOps uses a dedicated `reset-password.html` page so Supabase password recovery does not conflict with the application's hash-based routing.
+
+- Password reset redirects are calculated from the current origin and path.
+- PKCE is used to keep Supabase recovery separate from the application router.
 - A valid recovery session is verified before a password update.
-- Successful password changes sign out the temporary recovery session and return to sign-in.
-- Expired links and reset-email rate limits receive dedicated user messages.
-- For local development, allow `http://localhost:5501/**` (or specifically `http://localhost:5501/reset-password.html`) in Supabase **Authentication → URL Configuration → Redirect URLs**. Request a fresh reset email after changing this configuration.
+- Successful password changes sign out the temporary recovery session and return the user to sign-in.
+- Expired links and reset-email rate limits display dedicated user messages.
 
-## Current scope
+For local development, add the following redirect URLs in Supabase under **Authentication > URL Configuration > Redirect URLs**:
 
-Pulse AI incident triage (Create Incident page) is live once `incident-triage` is deployed and `ANTHROPIC_API_KEY` is set — see [SUPABASE_SETUP.md](SUPABASE_SETUP.md), section 12. Until then the panel stays inactive rather than returning fabricated results. The dashboard and incident-detail "Pulse AI" panels are still placeholders and are not wired to a live model yet.
+```text
+http://localhost:5501/**
+http://localhost:5501/reset-password.html
+```
 
-No live Supabase credentials are committed to this repository. A real project must be configured before end-to-end database/realtime/storage testing can run.
+Request a new reset email after changing the redirect configuration.
 
-`start-pulseops.bat` starts a local server and opens PulseOps automatically on Windows; local development defaults to `http://localhost:5501/pulseops-ui.html`.
+## Current Scope
+
+Pulse AI incident triage becomes active after the `incident-triage` Edge Function is deployed and the `ANTHROPIC_API_KEY` secret is configured. See section 12 of [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for details.
+
+Until then, the Create Incident Pulse AI panel remains inactive instead of returning fabricated results. The dashboard and incident-detail Pulse AI panels are currently placeholders and are not connected to a live model.
+
+No live Supabase credentials are committed to this repository. A real Supabase project must be configured before end-to-end database, Realtime, and Storage testing can run.
