@@ -1,0 +1,28 @@
+# Local secrets — never commit real credentials
+supabase-config.js
+.env
+.env.*
+!.env.example
+
+# Dependencies / build output
+node_modules/
+dist/
+coverage/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Supabase CLI local state
+.supabase/

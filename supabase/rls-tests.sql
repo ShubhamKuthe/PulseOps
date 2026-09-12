@@ -1,0 +1,26 @@
+-- Conceptual RLS checks for PulseOps.
+-- Run these in a disposable project using authenticated JWTs for users in different roles/orgs.
+
+-- Employee A cannot read Employee B unrelated incident.
+-- Employee cannot read incident_comments where visibility = 'internal'.
+-- Engineer cannot read another organization's incidents.
+-- Manager cannot update incidents outside their team.
+-- Administrator cannot access another organization because every policy checks current_organization_id().
+-- User cannot update profiles.role, profiles.organization_id, profiles.team_id, or profiles.status through direct table grants.
+-- User cannot insert audit_logs because no insert RLS policy exists.
+-- User cannot access another user's notifications.
+-- Attachment object paths require organization_id/incident_id prefixes and can_view_incident().
+-- Storage object reads fail when can_view_incident() is false.
+-- Organization rows are read-only to browser users; direct insert/update/delete is revoked.
+-- Disabled user can still SELECT only their own profile, while current_organization_id() returns null and blocks operational data.
+
+-- Post-setup migration 009 checks:
+-- 11. Engineer/Manager/Admin with can_manage_incident=true can DELETE matching
+--     incident_attachments metadata; Employee reporter cannot delete unless the
+--     incident-management policy explicitly grants management.
+-- 12. Manager cannot create/update on_call_schedules for another team.
+-- 13. On-call responder must be active and belong to the same organization;
+--     non-admin responder with a team must match the selected team.
+-- 14. Team lead and Service owner_team relationships cannot cross organizations.
+-- 15. Manager/Admin-created knowledge articles receive trusted organization and
+--     author values from database-side trigger logic.
